@@ -74,27 +74,37 @@ class BinFileApp(tk.Tk):
         for file_path in file_paths:
             date_time, hw_gain, qm_values = extract_info_from_bin(file_path)
 
-            # Convert HW-Gain to a numeric value for sorting
+            # Convert Date/Time to a sortable format
             try:
-                hw_gain_numeric = float(hw_gain.replace(",", "."))  # Handle comma decimal separators
+                datetime_numeric = int("".join(re.findall(r'\d+', date_time)))  # Convert YYYY.MM.DD HH:MM:SS to int
             except ValueError:
-                hw_gain_numeric = float('inf')  # If invalid, push to the end
+                datetime_numeric = 0  # If parsing fails, push to bottom
 
-            file_data.append((hw_gain_numeric, file_path, date_time, hw_gain, qm_values))
+            file_data.append((datetime_numeric, file_path, date_time, hw_gain, qm_values))
 
-        # Sort files by HW-Gain (lowest first, HW-Gain 30 last)
-        file_data.sort(key=lambda x: (x[0] != 30, x[0]))  # Ensure HW-Gain 30 is last
+        # Sort files by Date/Time (newest first)
+        file_data.sort(key=lambda x: x[0], reverse=True)
 
-        for hw_gain_numeric, file_path, date_time, hw_gain, qm_values in file_data:
+        for datetime_numeric, file_path, date_time, hw_gain, qm_values in file_data:
             output_text += f"File: {file_path.split('/')[-1]}\n"
             output_text += f"Date/Time: {date_time}\n"
             output_text += f"HW-Gain: {hw_gain}\n"
 
             for i, qm_value in enumerate(qm_values, start=1):
                 output_text += f"Qm{i}: {qm_value}\n"
-                all_qm_values.append(qm_value)  # Collect all Qm values
+                all_qm_values.append(qm_value)  # Collect Qm values
 
-            output_text += "\n"
+            output_text += "\n"  # Empty line between different bin files
+            all_qm_values.append("")  # Add a blank line in Qm box
+
+        # Update Full Info Box
+        self.info_box.delete("1.0", tk.END)
+        self.info_box.insert(tk.END, output_text.strip())
+
+        # Update Qm Values Box (newest Qm values first, with empty lines between files)
+        self.qm_box.delete("1.0", tk.END)
+        self.qm_box.insert(tk.END, "\n".join(all_qm_values).strip())
+
 
         # Update Full Info Box
         self.info_box.delete("1.0", tk.END)
