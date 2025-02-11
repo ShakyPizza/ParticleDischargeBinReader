@@ -19,32 +19,21 @@ def extract_info_from_bin(filepath):
     hw_gain_match = re.search(r'<HWGain>([\d,\.]+)</HWGain>', bin_data, re.IGNORECASE)
     hw_gain = hw_gain_match.group(1) if hw_gain_match else "Unknown"
 
-
     # Extract Qm values
     qm_matches = re.findall(r'<Qm[^>]*>([\d.eE\-]+)</Qm>', bin_data, re.IGNORECASE)
-    print("Extracted Qm values before conversion:", qm_matches)
     qm_values = []
     for val in qm_matches[:3]:
         try:
             num = float(val)
-            print(f"Converted {val} to float:", num)  # Debug print
 
-            # Convert to pico (p)
+            # Convert to pico (pF)
             num *= 1e12  # Convert from Farads to picoFarads
-
-            # Format display value
-            if num >= 1000:
-                final_value = f"{int(num)}"  # Convert to integer if large
-            else:
-                final_value = f"{num:.0f}".rstrip("0").rstrip(".")  # Keep precision, strip trailing zeros
+            final_value = str(round(num))  # Round and convert to string
 
             qm_values.append(final_value)
         except ValueError:
-            print("Failed to convert:", val)
             qm_values.append("Err")
 
-
-    print(qm_values)
     return date_time, hw_gain, qm_values
 
 # GUI Application class
@@ -56,43 +45,74 @@ class BinFileApp(tk.Tk):
         # Upload Button
         self.upload_button = tk.Button(self, text="Upload .bin Files", command=self.upload_file)
         self.upload_button.pack(pady=10)
-        
-        # Text Display Box
-        self.info_box = tk.Text(self, width=40, height=40)
+
+        # First Text Display Box (Full Info)
+        self.info_box = tk.Text(self, width=40, height=20)
         self.info_box.pack(pady=5)
-        
-        # Copy Button
+
+        # Copy Button for Full Info
         self.copy_button = tk.Button(self, text="Copy Data", command=self.copy_to_clipboard)
         self.copy_button.pack(pady=5)
-    
+
+        # Second Text Display Box (Qm values only)
+        self.qm_box = tk.Text(self, width=40, height=5)
+        self.qm_box.pack(pady=5)
+
+        # Copy Button for Qm values only
+        self.qm_copy_button = tk.Button(self, text="Copy Qm Values", command=self.copy_qm_to_clipboard)
+        self.qm_copy_button.pack(pady=5)
+
     def upload_file(self):
         file_paths = filedialog.askopenfilenames(filetypes=[("BIN Files", "*.bin")])
         if not file_paths:
             return
-        
+
+        file_data = []  # List to store file info for sorting
         output_text = ""
+        all_qm_values = []  # List to store all Qm values
+
         for file_path in file_paths:
             date_time, hw_gain, qm_values = extract_info_from_bin(file_path)
+
+            # Convert HW-Gain to a numeric value for sorting
+            try:
+                hw_gain_numeric = float(hw_gain.replace(",", "."))  # Handle comma decimal separators
+            except ValueError:
+                hw_gain_numeric = float('inf')  # If invalid, push to the end
+
+            file_data.append((hw_gain_numeric, file_path, date_time, hw_gain, qm_values))
+
+        # Sort files by HW-Gain (lowest first, HW-Gain 30 last)
+        file_data.sort(key=lambda x: (x[0] != 30, x[0]))  # Ensure HW-Gain 30 is last
+
+        for hw_gain_numeric, file_path, date_time, hw_gain, qm_values in file_data:
+            output_text += f"File: {file_path.split('/')[-1]}\n"
             output_text += f"Date/Time: {date_time}\n"
             output_text += f"HW-Gain: {hw_gain}\n"
-            # Display Qm values as separated
-            if len(qm_values) >= 3:
-                output_text += f"Qm1: {qm_values[0]}\n"
-                output_text += f"Qm2: {qm_values[1]}\n"
-                output_text += f"Qm3: {qm_values[2]}\n\n"
-            else:
-                output_text += f"Qm1: {qm_values[0] if len(qm_values)>0 else 'N/A'}\n"
-                output_text += f"Qm2: {qm_values[1] if len(qm_values)>1 else 'N/A'}\n"
-                output_text += f"Qm3: {qm_values[2] if len(qm_values)>2 else 'N/A'}\n\n"
-        
+
+            for i, qm_value in enumerate(qm_values, start=1):
+                output_text += f"Qm{i}: {qm_value}\n"
+                all_qm_values.append(qm_value)  # Collect all Qm values
+
+            output_text += "\n"
+
+        # Update Full Info Box
         self.info_box.delete("1.0", tk.END)
         self.info_box.insert(tk.END, output_text.strip())
-        
-        self.info_box.delete("1.0", tk.END)
-        self.info_box.insert(tk.END, output_text.strip())
-    
+
+        # Update Qm Values Box (all Qm values from all files, each on a new line)
+        self.qm_box.delete("1.0", tk.END)
+        self.qm_box.insert(tk.END, "\n".join(all_qm_values))
+
+      
     def copy_to_clipboard(self):
         text = self.info_box.get("1.0", tk.END)
+        self.clipboard_clear()
+        self.clipboard_append(text)
+        self.update()
+
+    def copy_qm_to_clipboard(self):
+        text = self.qm_box.get("1.0", tk.END)
         self.clipboard_clear()
         self.clipboard_append(text)
         self.update()
