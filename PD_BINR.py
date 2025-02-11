@@ -19,6 +19,7 @@ def extract_info_from_bin(filepath):
     hw_gain_match = re.search(r'<HWGain>([\d,\.]+)</HWGain>', bin_data, re.IGNORECASE)
     hw_gain = hw_gain_match.group(1) if hw_gain_match else "Unknown"
 
+
     # Extract Qm values
     qm_matches = re.findall(r'<Qm[^>]*>([\d.eE\-]+)</Qm>', bin_data, re.IGNORECASE)
     print("Extracted Qm values before conversion:", qm_matches)
@@ -27,21 +28,22 @@ def extract_info_from_bin(filepath):
         try:
             num = float(val)
             print(f"Converted {val} to float:", num)  # Debug print
-            # Optional scaling logic
-            if num < 1e-8:
-                num *= 100
-            elif num < 1e-7:
-                num *= 1000
-            # Separate mantissa and exponent
-            formatted = f"{num:e}"  # e.g. '1.234567e-10'
-            mantissa, exponent = formatted.split("e")
-            exponent = exponent.lstrip("+")  # remove + if present
-            # Combine them in a readable format or store separately
-            final_value = f"{mantissa}E{exponent}"
+
+            # Convert to pico (p)
+            num *= 1e12  # Convert from Farads to picoFarads
+
+            # Format display value
+            if num >= 1000:
+                final_value = f"{int(num)}"  # Convert to integer if large
+            else:
+                final_value = f"{num:.0f}".rstrip("0").rstrip(".")  # Keep precision, strip trailing zeros
+
             qm_values.append(final_value)
         except ValueError:
             print("Failed to convert:", val)
             qm_values.append("Err")
+
+
     print(qm_values)
     return date_time, hw_gain, qm_values
 
