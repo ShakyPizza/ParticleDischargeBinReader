@@ -41,6 +41,9 @@ class BinFileApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Bin File Data Extractor (V. 0.5)")
+        self.resizable(False, False)
+        self.geometry("400x600")
+        self.configure(bg="indianred")
 
         # Upload Button
         self.upload_button = tk.Button(self, text="Upload .bin Files", command=self.upload_file)
@@ -100,6 +103,7 @@ class BinFileApp(tk.Tk):
         # Update Full Info Box
         self.info_box.delete("1.0", tk.END)
         self.info_box.insert(tk.END, output_text.strip())
+        self.configure(bg="lawngreen")
 
         # Update Qm Values Box (newest Qm values first, with empty lines between files)
         self.qm_box.delete("1.0", tk.END)
