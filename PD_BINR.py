@@ -40,7 +40,7 @@ def extract_info_from_bin(filepath):
 class BinFileApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Bin File Data Extractor")
+        self.title("Bin File Data Extractor (Version 0.5)")
 
         # Upload Button
         self.upload_button = tk.Button(self, text="Upload .bin Files", command=self.upload_file)
