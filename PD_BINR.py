@@ -43,23 +43,45 @@ class BinFileApp(tk.Tk):
         self.title("Bin File Data Extractor (V. 0.5)")
         self.resizable(False, False)
         self.geometry("400x600")
-        self.configure(bg="indianred")
+        self.configure(bg="lightgrey")
+
+
 
         # Upload Button
         self.upload_button = tk.Button(self, text="Upload .bin Files", command=self.upload_file)
         self.upload_button.pack(pady=10)
 
-        # First Text Display Box (Full Info)
-        self.info_box = tk.Text(self, width=40, height=20)
-        self.info_box.pack(pady=5)
+        # Status indicator 
+        self.status_label = tk.Label(self.status_frame, text="Upload .bin files to extract data", bg="indianred")
+        self.status_label.pack(expand=True)
+
+        # First Text Display Box (Full Info) with Scrollbar
+        self.info_frame = tk.Frame(self)
+        self.info_frame.pack(pady=5)
+
+        self.info_scrollbar = tk.Scrollbar(self.info_frame)
+        self.info_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.info_box = tk.Text(self.info_frame, width=40, height=20, yscrollcommand=self.info_scrollbar.set)
+        self.info_box.pack(side=tk.LEFT)
+
+        self.info_scrollbar.config(command=self.info_box.yview)
 
         # Copy Button for Full Info
         self.copy_button = tk.Button(self, text="Copy Data", command=self.copy_to_clipboard)
         self.copy_button.pack(pady=5)
 
-        # Second Text Display Box (Qm values only)
-        self.qm_box = tk.Text(self, width=40, height=5)
-        self.qm_box.pack(pady=5)
+        # Second Text Display Box (Qm values only) with Scrollbar
+        self.qm_frame = tk.Frame(self)
+        self.qm_frame.pack(pady=5)
+
+        self.qm_scrollbar = tk.Scrollbar(self.qm_frame)
+        self.qm_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.qm_box = tk.Text(self.qm_frame, width=40, height=5, yscrollcommand=self.qm_scrollbar.set)
+        self.qm_box.pack(side=tk.LEFT)
+
+        self.qm_scrollbar.config(command=self.qm_box.yview)
 
         # Copy Button for Qm values only
         self.qm_copy_button = tk.Button(self, text="Copy Qm Values", command=self.copy_qm_to_clipboard)
@@ -103,7 +125,7 @@ class BinFileApp(tk.Tk):
         # Update Full Info Box
         self.info_box.delete("1.0", tk.END)
         self.info_box.insert(tk.END, output_text.strip())
-        self.configure(bg="lawngreen")
+        self.status_label.config(text=f"Extracted data from {len(file_paths)} files", bg="lightgreen")
 
         # Update Qm Values Box (newest Qm values first, with empty lines between files)
         self.qm_box.delete("1.0", tk.END)
