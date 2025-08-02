@@ -52,6 +52,8 @@ class BinFileApp(tk.Tk):
         self.upload_button.pack(pady=10)
 
         # Status indicator 
+        self.status_frame = tk.Frame(self)
+        self.status_frame.pack(pady=5)
         self.status_label = tk.Label(self.status_frame, text="Upload .bin files to extract data", bg="indianred")
         self.status_label.pack(expand=True)
 
