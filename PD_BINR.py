@@ -40,9 +40,9 @@ def extract_info_from_bin(filepath):
 class BinFileApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Bin File Data Extractor (V. 0.5)")
+        self.title("Bin File Data Extractor (V. 0.6)")
         self.resizable(False, False)
-        self.geometry("400x600")
+        self.geometry("400x800")
         self.configure(bg="lightgrey")
 
 
@@ -122,7 +122,8 @@ class BinFileApp(tk.Tk):
                 all_qm_values.append(qm_value)  # Collect Qm values
 
             output_text += "\n"  # Empty line between different bin files
-            all_qm_values.append("")  # Add a blank line in Qm box
+            for i in range(1):
+                all_qm_values.append("") # 1x empty line between different bin files in Qm box
 
         # Update Full Info Box
         self.info_box.delete("1.0", tk.END)
